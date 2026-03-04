@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "module": "commonjs",
   "types": "src/types/index.d.ts",
-  "description": "A Facebook Chat API (FCA) library for automating Facebook Messenger bot, based on ws3-fca.",
+  "description": "BB-FCA is a powerful and user-friendly Facebook Chat API wrapper for Node.js, designed to simplify the process of creating chatbots and automating interactions on Facebook Messenger. With BB-FCA, developers can easily send messages, manage conversations, and interact with the Facebook Messenger platform using a simple and intuitive API.",
   "main": "module/index",
   "scripts": {
     "test": "echo \"No tests yet\""
