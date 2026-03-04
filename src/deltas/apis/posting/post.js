@@ -282,73 +282,13 @@ module.exports = function (defaultFuncs, api, ctx) {
 
             // Construct the permalink URL
             const url = `https://www.facebook.com/permalink.php?story_fbid=${story_fbid}&id=${accountID}`;
-            console.log(url);
-            // Make GET request to fetch the page HTML
-            const html = await new Promise((resolve, reject) => {
-                defaultFuncs
-                    .get(url, ctx.jar, {}, null, {})
-                    .then(function (resData) {
-                        resolve(resData.body.toString());
-                    })
-                    .catch(function (err) {
-                        utils.error("getPostComments", err);
-                        reject(err);
-                    });
-            });
-            // Parse HTML to extract JSON data from script tag
-            const scriptMatch = html.match(/<script type="application\/json" data-content-len="\d+" data-sjs>(.*?)<\/script>/s);
 
-            if (!scriptMatch || !scriptMatch[1]) {
-                throw new Error("Failed to find JSON data in HTML response. The page structure may have changed.");
-            }
+            // Make GET request to fetch the page HTML with cookies
+            const resData = await utils.get(url, ctx.jar, {}, ctx.globalOptions, ctx);
+            const html = resData.body.toString();
 
-            const jsonData = JSON.parse(scriptMatch[1]);
-
-            // Navigate to comments in the JSON structure
-            if (!jsonData.require || !Array.isArray(jsonData.require) || jsonData.require.length === 0) {
-                throw new Error("Invalid JSON structure: 'require' not found.");
-            }
-
-            const require = jsonData.require[0].__bbox.require;
-            let comments = null;
-
-            // Find the RelayPrefetchedStreamCache entry
-            for (const req of require) {
-                if (req[0] === "RelayPrefetchedStreamCache") {
-                    try {
-                        const result = req[3][1].__bbox.result;
-                        comments = result.data.node_v2.comet_sections.feedback.story
-                            .story_ufi_container.story.feedback_context
-                            .feedback_target_with_context.comment_list_renderer.feedback
-                            .comment_rendering_instance_for_feed_location.comments;
-                        break;
-                    } catch (navError) {
-                        // Continue searching if this entry doesn't have the expected structure
-                        continue;
-                    }
-                }
-            }
-
-            if (!comments || !comments.edges) {
-                throw new Error("Comments not found in the response. The post may have no comments or the structure has changed.");
-            }
-
-            // Format comments into a cleaner structure
-            const commentList = comments.edges.map(edge => {
-                const node = edge.node;
-                return {
-                    id: node.legacy_fbid || node.id,
-                    text: node.body?.text || "",
-                    author: {
-                        id: node.author?.id || null,
-                        name: node.author?.name || "Unknown",
-                        avatar: node.author?.profile_picture_depth_0?.uri || null
-                    },
-                    created_time: node.created_time || null,
-                    reply_count: node.feedback?.replies_fields?.count || 0,
-                    like_count: node.feedback?.reaction_count?.count || 0
-                };
-            });
+            // Extract comments using new logic
+            const commentList = extractCommentsFromHTML(html);
 
             callback(null, commentList);
         } catch (err) {
@@ -357,6 +297,132 @@ module.exports = function (defaultFuncs, api, ctx) {
         }
 
         return returnPromise;
+    }
+
+    /**
+     * Navigate to comments in data structure
+     * @private
+     */
+    function navigateToComments(nodeData) {
+        try {
+            return nodeData?.comet_sections?.feedback?.story?.story_ufi_container?.story
+                ?.feedback_context?.feedback_target_with_context?.comment_list_renderer
+                ?.feedback?.comment_rendering_instance_for_feed_location?.comments;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /**
+     * Extract comments from HTML using new parsing logic
+     * @private
+     */
+    function extractCommentsFromHTML(htmlContent) {
+        const comments = [];
+
+        try {
+            // Find all script tags containing JSON data
+            const scriptMatches = htmlContent.match(/<script type="application\/json"\s+data-content-len="\d+"\s+data-sjs>(.*?)<\/script>/gs);
+
+            if (!scriptMatches) {
+                return comments;
+            }
+
+            // Loop through each script tag
+            for (const scriptMatch of scriptMatches) {
+                try {
+                    // Extract JSON content
+                    const jsonMatch = scriptMatch.match(/<script[^>]*>(.*?)<\/script>/s);
+                    if (!jsonMatch) continue;
+
+                    const jsonData = JSON.parse(jsonMatch[1]);
+
+                    // Look in require array
+                    if (!jsonData.require || !Array.isArray(jsonData.require)) continue;
+
+                    for (const req of jsonData.require) {
+                        if (!Array.isArray(req)) continue;
+
+                        // Find ScheduledServerJS
+                        if (req[0] === "ScheduledServerJS" && req[1] === "handle") {
+                            const payload = req[3];
+                            if (!payload || !Array.isArray(payload)) continue;
+
+                            for (const item of payload) {
+                                if (!item.__bbox || !item.__bbox.require) continue;
+
+                                for (const bboxReq of item.__bbox.require) {
+                                    if (!Array.isArray(bboxReq)) continue;
+
+                                    // Find RelayPrefetchedStreamCache
+                                    if (bboxReq[0] === "RelayPrefetchedStreamCache" && bboxReq[1] === "next") {
+                                        const streamData = bboxReq[3];
+                                        if (!streamData || !Array.isArray(streamData) || streamData.length < 2) continue;
+
+                                        const bboxData = streamData[1];
+                                        if (!bboxData || !bboxData.__bbox || !bboxData.__bbox.result) continue;
+
+                                        // Navigate to comments
+                                        const result = bboxData.__bbox.result;
+                                        if (!result.data || !result.data.node_v2) continue;
+
+                                        const commentData = navigateToComments(result.data.node_v2);
+
+                                        if (commentData && commentData.edges && Array.isArray(commentData.edges)) {
+                                            // Extract comments
+                                            commentData.edges.forEach(edge => {
+                                                if (!edge.node) return;
+
+                                                const comment = {
+                                                    id: edge.node.legacy_fbid,
+                                                    graphql_id: edge.node.id,
+                                                    text: edge.node.body?.text || edge.node.preferred_body?.text || "",
+                                                    created_time: edge.node.created_time,
+                                                    author: {
+                                                        id: edge.node.author?.id,
+                                                        name: edge.node.author?.name,
+                                                        avatar: edge.node.author?.profile_picture_depth_0?.uri
+                                                    },
+                                                    reply_count: edge.node.feedback?.replies_fields?.count || 0,
+                                                    total_reply_count: edge.node.feedback?.replies_fields?.total_count || 0,
+                                                    depth: edge.node.depth || 0
+                                                };
+
+                                                // Get replies if available
+                                                if (edge.node.feedback?.replies_connection?.edges) {
+                                                    comment.replies = edge.node.feedback.replies_connection.edges.map(replyEdge => {
+                                                        if (!replyEdge.node) return null;
+                                                        return {
+                                                            id: replyEdge.node.legacy_fbid,
+                                                            text: replyEdge.node.body?.text || replyEdge.node.preferred_body?.text || "",
+                                                            created_time: replyEdge.node.created_time,
+                                                            author: {
+                                                                id: replyEdge.node.author?.id,
+                                                                name: replyEdge.node.author?.name,
+                                                                avatar: replyEdge.node.author?.profile_picture_depth_0?.uri
+                                                            }
+                                                        };
+                                                    }).filter(r => r !== null);
+                                                }
+
+                                                comments.push(comment);
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // Skip JSON parse errors for this script
+                    continue;
+                }
+            }
+        } catch (error) {
+            utils.error("extractCommentsFromHTML", error);
+        }
+
+        return comments;
     }
 
     return {

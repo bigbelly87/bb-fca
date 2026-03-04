@@ -7,6 +7,7 @@ const { wrapper } = require("axios-cookiejar-support");
 const FormData = require("form-data");
 const { getHeaders } = require("./headers");
 const { getType } = require("./constants");
+const chalk = require("chalk");
 
 // Create an axios instance with cookie jar support
 const jar = new CookieJar();

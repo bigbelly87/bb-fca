@@ -69,13 +69,23 @@ declare module 'bb-fca' {
     avatar: string | null;
   }
 
-  export interface PostComment {
+  export interface PostCommentReply {
     id: string;
     text: string;
+    created_time: number;
     author: PostCommentAuthor;
-    created_time: string | null;
+  }
+
+  export interface PostComment {
+    id: string;
+    graphql_id: string;
+    text: string;
+    author: PostCommentAuthor;
+    created_time: number;
     reply_count: number;
-    like_count: number;
+    total_reply_count: number;
+    depth: number;
+    replies?: PostCommentReply[];
   }
 
   export interface GetPostCommentsOptions {
