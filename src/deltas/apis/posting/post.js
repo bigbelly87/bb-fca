@@ -1,6 +1,7 @@
 "use strict";
 
 const utils = require('../../../utils');
+const fs = require('fs');
 
 /**
  * @namespace api.post
@@ -14,6 +15,7 @@ module.exports = function (defaultFuncs, api, ctx) {
      * @param {string|object} options - The post content (string) or options object.
      * @param {string} options.message - The text content of the post.
      * @param {string} [options.privacy="SELF"] - Privacy setting: "EVERYONE", "FRIENDS", or "SELF".
+     * @param {Array<string>} [options.photos] - Array of photo IDs to attach.
      * @param {Function} [callback] - Optional callback function.
      * @returns {Promise<object>} The server's response containing post details.
      */
@@ -22,18 +24,16 @@ module.exports = function (defaultFuncs, api, ctx) {
             // Handle both string and object input
             let postMessage = "";
             let privacy = "SELF";
+            let photos = [];
 
             if (typeof options === "string") {
                 postMessage = options;
             } else if (typeof options === "object") {
                 postMessage = options.message || "";
                 privacy = options.privacy || "SELF";
+                photos = options.photos || [];
             } else {
                 throw new Error("Invalid input: expected string or object.");
-            }
-
-            if (!postMessage) {
-                throw new Error("Post message is required.");
             }
 
             // Validate privacy setting
@@ -41,8 +41,12 @@ module.exports = function (defaultFuncs, api, ctx) {
             if (!validPrivacy.includes(privacy)) {
                 throw new Error(`Invalid privacy setting. Use one of: ${validPrivacy.join(", ")}`);
             }
+            // Validate photos
+            if (!Array.isArray(photos)) {
+                photos = [photos];
+            }
 
-            const composerSessionId = `create-post-${Date.now()}`;
+            const composerSessionId = `${Date.now().toString(36)}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}`;
             const idempotenceToken = `${composerSessionId}_FEED`;
 
             const variables = {
@@ -64,14 +68,11 @@ module.exports = function (defaultFuncs, api, ctx) {
                         ranges: [],
                         text: postMessage
                     },
+                    with_tags_ids: null,
                     inline_activities: [],
                     text_format_preset_id: "0",
                     publishing_flow: {
                         supported_flows: ["ASYNC_SILENT", "ASYNC_NOTIF", "FALLBACK"]
-                    },
-                    reels_remix: {
-                        is_original_audio_reusable: true,
-                        remix_status: "ENABLED"
                     },
                     logging: {
                         composer_session_id: composerSessionId
@@ -111,7 +112,16 @@ module.exports = function (defaultFuncs, api, ctx) {
                 hashtag: null,
                 canUserManageOffers: false
             };
-
+            // Add photo attachments if provided
+            if (photos && photos.length > 0) {
+                variables.input.attachments = photos
+                    .filter(Boolean) // Remove null/undefined
+                    .map(photoID => ({
+                        photo: {
+                            id: String(photoID)
+                        }
+                    }));
+            }
             const form = {
                 av: ctx.userID,
                 __user: ctx.userID,
@@ -425,9 +435,108 @@ module.exports = function (defaultFuncs, api, ctx) {
         return comments;
     }
 
+    /**
+     * Upload a photo to Facebook
+     * @param {string} photoPath - File path to the photo
+     * @param {Function} [callback] - Optional callback function
+     * @returns {Promise<object>} Object containing photo ID and metadata
+     */
+    async function uploadPhoto(photoPath, callback) {
+        let resolveFunc = function () { };
+        let rejectFunc = function () { };
+
+        const returnPromise = new Promise(function (resolve, reject) {
+            resolveFunc = resolve;
+            rejectFunc = reject;
+        });
+
+        callback = callback || function (err, data) {
+            if (err) return rejectFunc(err);
+            resolveFunc(data);
+        };
+
+        try {
+            if (!photoPath) {
+                throw new Error("Photo path is required.");
+            }
+
+            // Validate if file exists
+            if (typeof photoPath !== 'string') {
+                throw new Error("Photo path must be a string.");
+            }
+
+            if (!fs.existsSync(photoPath)) {
+                throw new Error(`Photo file not found: ${photoPath}`);
+            }
+
+            // Create readable stream from file path
+            const photoStream = fs.createReadStream(photoPath);
+
+            // Generate upload_id
+            const uploadId = `jsc_c_${Math.random().toString(36).substring(2, 11)}`;
+
+            // Construct URL with query parameters
+            const url = new URL('https://upload.facebook.com/ajax/react_composer/attachments/photo/upload');
+            url.searchParams.append('av', ctx.userID);
+            url.searchParams.append('__aaid', '0');
+            url.searchParams.append('__user', ctx.userID);
+            url.searchParams.append('__a', '1');
+            url.searchParams.append('__req', '1');
+            url.searchParams.append('__hs', '20516.HCSV2:comet_pkg.2.1...0');
+            url.searchParams.append('dpr', '2');
+            url.searchParams.append('__ccg', 'EXCELLENT');
+            url.searchParams.append('__comet_req', '15');
+            url.searchParams.append('fb_dtsg', ctx.fb_dtsg);
+            url.searchParams.append('jazoest', ctx.jazoest);
+            url.searchParams.append('lsd', ctx.fb_dtsg);
+
+            // Prepare form data
+            const form = {
+                source: '8',
+                profile_id: ctx.userID,
+                waterfallxapp: 'comet',
+                farr: photoStream,
+                upload_id: uploadId
+            };
+
+            // Upload photo using utils to auto-load cookies
+            const uploadResponse = await utils.postFormData(
+                url.toString(),
+                ctx.jar,
+                form,
+                ctx.globalOptions,
+                ctx
+            );
+
+            const uploadResult = JSON.parse(uploadResponse.body.toString().replace(/^for \(;;\);/, ''));
+
+            if (uploadResult.error || uploadResult.errors) {
+                throw new Error(JSON.stringify(uploadResult.error || uploadResult.errors));
+            }
+
+            // Extract photo ID from response
+            const photoId = uploadResult.payload?.fbid || uploadResult.payload?.photoID || null;
+
+            const result = {
+                success: true,
+                photoID: photoId,
+                uploadID: uploadId,
+                data: uploadResult
+            };
+
+            callback(null, result);
+        } catch (err) {
+            utils.error("uploadPhoto", err);
+            callback(err);
+        }
+
+        return returnPromise;
+    }
+
     return {
         create: createPost,
         delete: deletePost,
-        getComments: getPostComments
+        getComments: getPostComments,
+        uploadPhoto: uploadPhoto
     }
 };

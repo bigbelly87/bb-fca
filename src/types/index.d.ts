@@ -99,8 +99,9 @@ declare module 'bb-fca' {
   }
 
   export interface CreatePostOptions {
-    message: string;
+    message?: string;
     privacy?: 'EVERYONE' | 'FRIENDS' | 'SELF';
+    photos?: string[];
   }
 
   export interface CreatePostResult {
@@ -112,6 +113,13 @@ declare module 'bb-fca' {
   export interface DeletePostResult {
     success: boolean;
     postID: string;
+    data: any;
+  }
+
+  export interface UploadPhotoResult {
+    success: boolean;
+    photoID: string | null;
+    uploadID: string;
     data: any;
   }
 
@@ -452,6 +460,10 @@ declare module 'bb-fca' {
         postID: string | GetPostCommentsOptions,
         callback?: Callback<PostComment[]>,
       ): Promise<PostComment[]>;
+      uploadPhoto(
+        photoPath: string,
+        callback?: Callback<UploadPhotoResult>,
+      ): Promise<UploadPhotoResult>;
     };
 
     share(
