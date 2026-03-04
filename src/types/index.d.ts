@@ -63,9 +63,46 @@ declare module 'bb-fca' {
     count: number;
   }
 
+  export interface PostCommentAuthor {
+    id: string | null;
+    name: string;
+    avatar: string | null;
+  }
+
+  export interface PostComment {
+    id: string;
+    text: string;
+    author: PostCommentAuthor;
+    created_time: string | null;
+    reply_count: number;
+    like_count: number;
+  }
+
+  export interface GetPostCommentsOptions {
+    story_fbid: string;
+    id?: string;
+  }
+
   export interface ShareResult {
     postID: string;
     url: string;
+  }
+
+  export interface CreatePostOptions {
+    message: string;
+    privacy?: 'EVERYONE' | 'FRIENDS' | 'SELF';
+  }
+
+  export interface CreatePostResult {
+    success: boolean;
+    postID: string | null;
+    data: any;
+  }
+
+  export interface DeletePostResult {
+    success: boolean;
+    postID: string;
+    data: any;
   }
 
   export interface Attachment {
@@ -391,6 +428,22 @@ declare module 'bb-fca' {
       replyCommentID?: string,
       callback?: Callback<CommentResult>,
     ): Promise<CommentResult>;
+
+    post: {
+      create(
+        options: string | CreatePostOptions,
+        callback?: Callback<CreatePostResult>,
+      ): Promise<CreatePostResult>;
+      delete(
+        postID: string,
+        callback?: Callback<DeletePostResult>,
+      ): Promise<DeletePostResult>;
+      getComments(
+        postID: string | GetPostCommentsOptions,
+        callback?: Callback<PostComment[]>,
+      ): Promise<PostComment[]>;
+    };
+
     share(
       text: string,
       postID: string,

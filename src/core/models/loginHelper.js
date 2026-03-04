@@ -68,16 +68,16 @@ async function loginHelper(credentials, globalOptions, callback, setOptionsFunc,
                 }
                 let cstrs = resp.data["session_cookies"].map(c => `${c.name}=${c.value}`);
                 cstrs.forEach(cstr => {
-                  const domain = ".facebook.com";
-                  const expires = new Date().getTime() + 1000 * 60 * 60 *24 * 365;
-                  const str = `${cstr}; expires=${expires}; domain=${domain}; path=/;`;
-                  jar.setCookie(str, `https://${domain}`);
+                    const domain = ".facebook.com";
+                    const expires = new Date().getTime() + 1000 * 60 * 60 * 24 * 365;
+                    const str = `${cstr}; expires=${expires}; domain=${domain}; path=/;`;
+                    jar.setCookie(str, `https://${domain}`);
                 });
             } catch (e) {
                 throw new Error("Wrong password / email");
             }
         } else {
-                throw new Error("No cookie or credentials found. Please provide cookies or credentials.");
+            throw new Error("No cookie or credentials found. Please provide cookies or credentials.");
         }
 
         if (!api) {
@@ -114,7 +114,7 @@ async function loginHelper(credentials, globalOptions, callback, setOptionsFunc,
         defaultFuncs = newDefaultFuncs;
         api.message = new Map();
         api.timestamp = {};
-        
+
         /**
          * Loads API modules from the deltas/apis directory.
          *
@@ -157,7 +157,7 @@ async function loginHelper(credentials, globalOptions, callback, setOptionsFunc,
         api.ctx = ctx;
         api.defaultFuncs = defaultFuncs;
         api.globalOptions = globalOptions;
-        
+
         return callback(null, api);
     } catch (error) {
         utils.error("loginHelper", error.error || error);

@@ -164,7 +164,6 @@ async function post(url, reqJar, form, options, ctx, customHeader) {
         }
         data = transformedForm.toString();
     }
-    
     headers['Content-Type'] = contentType;
 
     const config = {
@@ -207,10 +206,10 @@ async function postFormData(url, reqJar, form, qs, options, ctx) {
 }
 
 module.exports = {
-  cleanGet,
-  get,
-  post,
-  postFormData,
-  getJar: () => jar,
-  setProxy,
+    cleanGet,
+    get,
+    post,
+    postFormData,
+    getJar: () => jar,
+    setProxy,
 };

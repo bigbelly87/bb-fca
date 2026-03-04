@@ -149,11 +149,11 @@ function getAccessFromBusiness(jar, Options) {
     const html = res ? res.body : null;
     const { get } = require("./request");
     try {
-        const businessRes = await get("https://business.facebook.com/content_management", jar, null, Options, null, { noRef: true });
-        const token = /"accessToken":"([^.]+)","clientID":/g.exec(businessRes.body)[1];
-        return [html, token];
+      const businessRes = await get("https://business.facebook.com/content_management", jar, null, Options, null, { noRef: true });
+      const token = /"accessToken":"([^.]+)","clientID":/g.exec(businessRes.body)[1];
+      return [html, token];
     } catch (e) {
-        return [html, null];
+      return [html, null];
     }
   };
 }
