@@ -272,7 +272,7 @@ module.exports = {
   getFrom,
   makeParsable,
   arrToForm,
-  arrayToObject, 
+  arrayToObject,
   getSignatureID,
   generateTimestampRelative,
   getType,
