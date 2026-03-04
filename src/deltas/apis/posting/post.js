@@ -395,7 +395,8 @@ module.exports = function (defaultFuncs, api, ctx) {
                                                     },
                                                     reply_count: edge.node.feedback?.replies_fields?.count || 0,
                                                     total_reply_count: edge.node.feedback?.replies_fields?.total_count || 0,
-                                                    depth: edge.node.depth || 0
+                                                    depth: edge.node.depth || 0,
+                                                    attachments: edge.node.attachments || []
                                                 };
 
                                                 // Get replies if available
