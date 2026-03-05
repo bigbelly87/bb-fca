@@ -1,0 +1,1 @@
+{"version":3,"file":"formatID.js","sourceRoot":"","sources":["../../../../src/utils/formatters/value/formatID.ts"],"names":[],"mappings":";;AAAA;;;;GAIG;AACH,SAAS,QAAQ,CAAC,EAAE;IAClB,IAAI,EAAE,IAAI,SAAS,IAAI,EAAE,IAAI,IAAI,EAAE,CAAC;QAClC,OAAO,EAAE,CAAC,OAAO,CAAC,aAAa,EAAE,EAAE,CAAC,CAAC;IACvC,CAAC;SAAM,CAAC;QACN,OAAO,EAAE,CAAC;IACZ,CAAC;AACH,CAAC;AAED,kBAAe,QAAQ,CAAC"}

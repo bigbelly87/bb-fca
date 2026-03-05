@@ -1,5 +1,5 @@
 "use strict";
 
-const { login } = require('../src/core/client');
+const { login } = require('../dist/core/client');
 
 module.exports = { login };

@@ -1,0 +1,1 @@
+{"version":3,"file":"formatCookie.js","sourceRoot":"","sources":["../../../../src/utils/formatters/value/formatCookie.ts"],"names":[],"mappings":";;AAAA;;;;;GAKG;AACH,SAAS,YAAY,CAAC,GAAG,EAAE,GAAG;IAC5B,OAAO,CACL,GAAG,CAAC,CAAC,CAAC,GAAG,GAAG,GAAG,GAAG,CAAC,CAAC,CAAC,GAAG,SAAS,GAAG,GAAG,CAAC,CAAC,CAAC,GAAG,WAAW,GAAG,GAAG,GAAG,MAAM,CACxE,CAAC;AACJ,CAAC;AAED,kBAAe,YAAY,CAAC"}

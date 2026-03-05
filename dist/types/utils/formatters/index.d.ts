@@ -1,0 +1,17 @@
+import formatID from "./value/formatID";
+import formatDate from "./value/formatDate";
+import formatCookie from "./value/formatCookie";
+import { _formatAttachment, formatAttachment } from "./data/formatAttachment";
+import { formatDeltaMessage, formatDeltaEvent, formatDeltaReadReceipt, getAdminTextMessageType } from "./data/formatDelta";
+export declare function isReadableStream(obj: any): boolean;
+export declare function decodeClientPayload(payload: number[]): any;
+export declare function formatMessage(m: any): any;
+export declare function formatEvent(m: any): any;
+export declare function formatHistoryMessage(m: any): any;
+export declare function formatTyp(event: any): any;
+export declare function formatReadReceipt(event: any): any;
+export declare function formatRead(event: any): any;
+export declare function formatThread(data: any): any;
+export declare function formatPresence(presence: any, userID: string): any;
+export declare function formatProxyPresence(presence: any, userID: string): any | null;
+export { formatID, formatDate, formatCookie, formatAttachment, _formatAttachment, formatDeltaMessage, formatDeltaEvent, formatDeltaReadReceipt, getAdminTextMessageType };
