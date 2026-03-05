@@ -25,22 +25,22 @@ function default_1(defaultFuncs, api, ctx) {
             callback = () => { };
         }
         const form = {
-            fb_api_caller_class: "RelayModern",
-            fb_api_req_friendly_name: "MWInboxTrayNoteCreationDialogQuery",
+            fb_api_caller_class: 'RelayModern',
+            fb_api_req_friendly_name: 'MWInboxTrayNoteCreationDialogQuery',
             variables: JSON.stringify({ scale: 2 }),
-            doc_id: "30899655739648624",
+            doc_id: '30899655739648624',
         };
         defaultFuncs
-            .post("https://www.facebook.com/api/graphql/", ctx.jar, form)
+            .post('https://www.facebook.com/api/graphql/', ctx.jar, form)
             .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
-            .then(resData => {
+            .then((resData) => {
             if (resData && resData.errors)
                 throw resData.errors[0];
             const currentNote = resData?.data?.viewer?.actor?.msgr_user_rich_status;
             callback(null, currentNote);
         })
-            .catch(err => {
-            utils.error("notes.checkNote", err);
+            .catch((err) => {
+            utils.error('notes.checkNote', err);
             callback(err);
         });
     }
@@ -49,7 +49,7 @@ function default_1(defaultFuncs, api, ctx) {
      * @param {string} text The content of the note.
      * @param {notesCallback} callback A callback function that is executed after the request. It receives an error object (if any) and an object confirming the note's creation status.
      */
-    function createNote(text, privacy = "EVERYONE", callback) {
+    function createNote(text, privacy = 'EVERYONE', callback) {
         if (typeof callback !== 'function') {
             callback = () => { };
         }
@@ -59,30 +59,30 @@ function default_1(defaultFuncs, api, ctx) {
                 actor_id: ctx.userID,
                 description: text,
                 duration: 86400, // 24 hours in seconds
-                note_type: "TEXT_NOTE",
+                note_type: 'TEXT_NOTE',
                 privacy,
                 session_id: utils.getGUID(),
             },
         };
         const form = {
-            fb_api_caller_class: "RelayModern",
-            fb_api_req_friendly_name: "MWInboxTrayNoteCreationDialogCreationStepContentMutation",
+            fb_api_caller_class: 'RelayModern',
+            fb_api_req_friendly_name: 'MWInboxTrayNoteCreationDialogCreationStepContentMutation',
             variables: JSON.stringify(variables),
-            doc_id: "24060573783603122",
+            doc_id: '24060573783603122',
         };
         defaultFuncs
-            .post("https://www.facebook.com/api/graphql/", ctx.jar, form)
+            .post('https://www.facebook.com/api/graphql/', ctx.jar, form)
             .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
-            .then(resData => {
+            .then((resData) => {
             if (resData && resData.errors)
                 throw resData.errors[0];
             const status = resData?.data?.xfb_rich_status_create?.status;
             if (!status)
-                throw new Error("Could not find note status in the server response.");
+                throw new Error('Could not find note status in the server response.');
             callback(null, status);
         })
-            .catch(err => {
-            utils.error("notes.createNote", err);
+            .catch((err) => {
+            utils.error('notes.createNote', err);
             callback(err);
         });
     }
@@ -103,24 +103,24 @@ function default_1(defaultFuncs, api, ctx) {
             },
         };
         const form = {
-            fb_api_caller_class: "RelayModern",
-            fb_api_req_friendly_name: "useMWInboxTrayDeleteNoteMutation",
+            fb_api_caller_class: 'RelayModern',
+            fb_api_req_friendly_name: 'useMWInboxTrayDeleteNoteMutation',
             variables: JSON.stringify(variables),
-            doc_id: "9532619970198958",
+            doc_id: '9532619970198958',
         };
         defaultFuncs
-            .post("https://www.facebook.com/api/graphql/", ctx.jar, form)
+            .post('https://www.facebook.com/api/graphql/', ctx.jar, form)
             .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
-            .then(resData => {
+            .then((resData) => {
             if (resData && resData.errors)
                 throw resData.errors[0];
             const deletedStatus = resData?.data?.xfb_rich_status_delete;
             if (!deletedStatus)
-                throw new Error("Could not find deletion status in the server response.");
+                throw new Error('Could not find deletion status in the server response.');
             callback(null, deletedStatus);
         })
-            .catch(err => {
-            utils.error("notes.deleteNote", err);
+            .catch((err) => {
+            utils.error('notes.deleteNote', err);
             callback(err);
         });
     }
@@ -153,5 +153,4 @@ function default_1(defaultFuncs, api, ctx) {
         check: checkNote,
     };
 }
-;
 //# sourceMappingURL=notes.js.map

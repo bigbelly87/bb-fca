@@ -23,16 +23,18 @@ function default_1(defaultFuncs, api, ctx) {
             _resolvePromise = resolve;
             _rejectPromise = reject;
         });
-        if (utils.getType(callback) === "Function" || utils.getType(callback) === "AsyncFunction") {
+        if (utils.getType(callback) === 'Function' ||
+            utils.getType(callback) === 'AsyncFunction') {
             _callback = callback;
             _initiatorID = initiatorID;
         }
-        else if (utils.getType(threadID) === "Function" || utils.getType(threadID) === "AsyncFunction") {
+        else if (utils.getType(threadID) === 'Function' ||
+            utils.getType(threadID) === 'AsyncFunction') {
             _callback = threadID;
             threadID = null;
             _initiatorID = callback;
         }
-        else if (utils.getType(callback) === "string") {
+        else if (utils.getType(callback) === 'string') {
             _initiatorID = callback;
             _callback = undefined;
         }
@@ -64,13 +66,13 @@ function default_1(defaultFuncs, api, ctx) {
         _initiatorID = _initiatorID || ctx.userID;
         threadID = threadID || ctx.threadID;
         if (!threadID) {
-            return _callback(new Error("threadID is required to change the group chat name."));
+            return _callback(new Error('threadID is required to change the group chat name.'));
         }
         if (typeof newName !== 'string') {
-            return _callback(new Error("newName must be a string."));
+            return _callback(new Error('newName must be a string.'));
         }
         if (!ctx.mqttClient) {
-            return _callback(new Error("Not connected to MQTT"));
+            return _callback(new Error('Not connected to MQTT'));
         }
         ctx.wsReqNumber += 1;
         ctx.wsTaskNumber += 1;
@@ -102,7 +104,7 @@ function default_1(defaultFuncs, api, ctx) {
                 return _callback(new Error(`MQTT publish failed for gcname: ${err.message || err}`));
             }
             const gcnameChangeEvent = {
-                type: "thread_name_update",
+                type: 'thread_name_update',
                 threadID: threadID,
                 newName: newName,
                 senderID: _initiatorID,
@@ -114,5 +116,4 @@ function default_1(defaultFuncs, api, ctx) {
         return returnPromise;
     };
 }
-;
 //# sourceMappingURL=gcname.js.map

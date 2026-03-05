@@ -6,9 +6,12 @@ function default_1(defaultFuncs, api, ctx) {
     return function getAccess(authCode = '', callback) {
         var cb;
         var url = 'https://business.facebook.com/';
-        var Referer = url + 'security/twofactor/reauth/?twofac_next=' + encodeURIComponent(url + 'content_management') + '&type=avoid_bypass&app_id=0&save_device=0';
+        var Referer = url +
+            'security/twofactor/reauth/?twofac_next=' +
+            encodeURIComponent(url + 'content_management') +
+            '&type=avoid_bypass&app_id=0&save_device=0';
         var rt = new Promise(function (resolve, reject) {
-            cb = (error, token) => token ? resolve(token) : reject(error);
+            cb = (error, token) => (token ? resolve(token) : reject(error));
         });
         if (typeof authCode == 'function') {
             callback = authCode;
@@ -22,11 +25,11 @@ function default_1(defaultFuncs, api, ctx) {
             utils
                 .get(url + 'content_management', ctx.jar, null, ctx.globalOptions, null, {
                 noRef: true,
-                Origin: url
+                Origin: url,
             })
                 .then(function (res) {
                 var html = res.body;
-                var lsd = utils.getFrom(html, "[\"LSD\",[],{\"token\":\"", "\"}");
+                var lsd = utils.getFrom(html, '["LSD",[],{"token":"', '"}');
                 return lsd;
             })
                 .then(function (lsd) {
@@ -39,17 +42,17 @@ function default_1(defaultFuncs, api, ctx) {
                         pCb({
                             error: 'submitCode',
                             lerror: 'code must be string',
-                            continue: submitCode
+                            continue: submitCode,
                         });
                     else
                         defaultFuncs
                             .post(url + 'security/twofactor/reauth/enter/', ctx.jar, {
                             approvals_code: code,
                             save_device: true,
-                            lsd
+                            lsd,
                         }, ctx.globalOptions, null, {
                             Referer,
-                            Origin: url
+                            Origin: url,
                         })
                             .then(function (res) {
                             var { payload } = JSON.parse(res.body.split(';').pop() || '{}');
@@ -57,7 +60,7 @@ function default_1(defaultFuncs, api, ctx) {
                                 throw {
                                     error: 'submitCode',
                                     lerror: payload.message,
-                                    continue: submitCode
+                                    continue: submitCode,
                                 };
                             return;
                         })
@@ -74,7 +77,7 @@ function default_1(defaultFuncs, api, ctx) {
                             if (!res[1])
                                 throw {
                                     error: 'token-undefined',
-                                    htmlData: res[0]
+                                    htmlData: res[0],
                                 };
                             ctx.access_token = res[1][1];
                             return pCb(null, res[1][1]);
@@ -90,15 +93,15 @@ function default_1(defaultFuncs, api, ctx) {
                 else if (typeof callback == 'function')
                     throw {
                         error: 'submitCode',
-                        continue: submitCode
+                        continue: submitCode,
                     };
                 else
                     throw {
-                        error: 'authentication code must be string or number or callback must be a function to continue'
+                        error: 'authentication code must be string or number or callback must be a function to continue',
                     };
             })
                 .catch(function (err) {
-                utils.error('getAccess', typeof callback == 'function' ? (err.error || err) : err);
+                utils.error('getAccess', typeof callback == 'function' ? err.error || err : err);
                 return cb(err);
             });
         return rt;

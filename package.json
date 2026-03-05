@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "BB-FCA is a powerful and user-friendly Facebook Chat API wrapper for Node.js, designed to simplify the process of creating chatbots and automating interactions on Facebook Messenger. With BB-FCA, developers can easily send messages, manage conversations, and interact with the Facebook Messenger platform using a simple and intuitive API.",
   "main": "dist/core/client.js",
-  "types": "dist/types/index.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp src/types/index.d.ts dist/index.d.ts",
     "dev": "tsc --watch",
     "prepublishOnly": "npm run build",
     "test": "echo \"No tests yet\""

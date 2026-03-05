@@ -5,10 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = default_1;
 const utils = require("../../../utils");
+const events_1 = require("events");
+const https_proxy_agent_1 = __importDefault(require("https-proxy-agent"));
 const mqtt_1 = __importDefault(require("mqtt"));
 const websocket_stream_1 = __importDefault(require("websocket-stream"));
-const https_proxy_agent_1 = __importDefault(require("https-proxy-agent"));
-const events_1 = require("events");
 function connectLightspeed(ctx, globalCallback) {
     let client;
     let isStopped = false;
@@ -18,7 +18,9 @@ function connectLightspeed(ctx, globalCallback) {
         const chatOn = ctx.globalOptions.online;
         const foreground = false;
         const sessionID = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + 1;
-        const cookies = ctx.jar.getCookiesSync('https://www.facebook.com').join('; ');
+        const cookies = ctx.jar
+            .getCookiesSync('https://www.facebook.com')
+            .join('; ');
         const cid = ctx.clientID;
         const username = {
             u: ctx.userID,
@@ -48,7 +50,7 @@ function connectLightspeed(ctx, globalCallback) {
             'x-dgw-tier': 'prod',
             'x-dgw-loggingid': utils.getGUID(),
             'x-dgw-regionhint': ctx.region || 'PRN',
-            'x-dgw-deviceid': ctx.clientID
+            'x-dgw-deviceid': ctx.clientID,
         });
         const host = `wss://gateway.facebook.com/ws/lightspeed?${queryParams.toString()}`;
         const options = {
@@ -59,38 +61,38 @@ function connectLightspeed(ctx, globalCallback) {
             clean: true,
             wsOptions: {
                 headers: {
-                    'Cookie': cookies,
-                    'Origin': 'https://www.facebook.com',
+                    Cookie: cookies,
+                    Origin: 'https://www.facebook.com',
                     'User-Agent': username.a,
-                    'Referer': 'https://www.facebook.com/',
-                    'Host': new URL(host).hostname
-                }
+                    Referer: 'https://www.facebook.com/',
+                    Host: new URL(host).hostname,
+                },
             },
             keepalive: 10,
-            reconnectPeriod: 0
+            reconnectPeriod: 0,
         };
         if (ctx.globalOptions.proxy) {
             options.wsOptions.agent = new https_proxy_agent_1.default(ctx.globalOptions.proxy);
         }
         try {
-            client = new mqtt_1.default.Client(_ => (0, websocket_stream_1.default)(host, options.wsOptions), options);
-            utils.log("[Lightspeed] Attempting MQTT connection...");
+            client = new mqtt_1.default.Client((_) => (0, websocket_stream_1.default)(host, options.wsOptions), options);
+            utils.log('[Lightspeed] Attempting MQTT connection...');
         }
         catch (err) {
-            utils.error("[Lightspeed] MQTT Client creation failed:", err.message);
+            utils.error('[Lightspeed] MQTT Client creation failed:', err.message);
             reconnect(retryCount + 1);
             return;
         }
         client.on('connect', () => {
-            utils.log("[Lightspeed] MQTT client connected. Attempting to subscribe to topics...");
+            utils.log('[Lightspeed] MQTT client connected. Attempting to subscribe to topics...');
             retryCount = 0;
             // --- ITO ANG IDINAGDAG NA SUBSCRIBE LOGIC ---
             const topicsToSubscribe = [
-                "/t_ms", // Para sa mga messages at deltas
-                "/orca_presence", // Para sa online status
-                "/messaging_events" // Para sa ibang events
+                '/t_ms', // Para sa mga messages at deltas
+                '/orca_presence', // Para sa online status
+                '/messaging_events', // Para sa ibang events
             ];
-            topicsToSubscribe.forEach(topic => {
+            topicsToSubscribe.forEach((topic) => {
                 client.subscribe(topic, (err) => {
                     if (err) {
                         utils.error(`[Lightspeed] Failed to subscribe to topic ${topic}:`, err.message);
@@ -104,7 +106,11 @@ function connectLightspeed(ctx, globalCallback) {
         });
         client.on('message', (topic, payload) => {
             utils.log(`[Lightspeed] Payload Received on topic ${topic}:`);
-            globalCallback(null, { type: 'lightspeed_message', topic: topic.toString(), payload: payload });
+            globalCallback(null, {
+                type: 'lightspeed_message',
+                topic: topic.toString(),
+                payload: payload,
+            });
         });
         client.on('close', () => {
             utils.warn(`[Lightspeed] Connection closed.`);
@@ -113,7 +119,7 @@ function connectLightspeed(ctx, globalCallback) {
             }
         });
         client.on('error', (err) => {
-            utils.error("[Lightspeed] MQTT Connection Error:", err.message);
+            utils.error('[Lightspeed] MQTT Connection Error:', err.message);
         });
     }
     function reconnect(retryCount) {
@@ -127,8 +133,8 @@ function connectLightspeed(ctx, globalCallback) {
             isStopped = true;
             if (client)
                 client.end(true);
-            utils.log("[Lightspeed] Listener has been manually stopped.");
-        }
+            utils.log('[Lightspeed] Listener has been manually stopped.');
+        },
     };
 }
 function default_1(defaultFuncs, api, ctx) {
@@ -145,8 +151,8 @@ function default_1(defaultFuncs, api, ctx) {
         const msgEmitter = new MessageEmitter();
         const globalCallback = (error, message) => {
             if (error)
-                return msgEmitter.emit("error", error);
-            msgEmitter.emit("message", message);
+                return msgEmitter.emit('error', error);
+            msgEmitter.emit('message', message);
         };
         if (typeof callback === 'function') {
             msgEmitter.listener = connectLightspeed(ctx, callback);
@@ -157,5 +163,4 @@ function default_1(defaultFuncs, api, ctx) {
         return msgEmitter;
     };
 }
-;
 //# sourceMappingURL=listenSpeed.js.map

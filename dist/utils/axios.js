@@ -10,15 +10,15 @@ exports.get = get;
 exports.post = post;
 exports.postFormData = postFormData;
 const axios_1 = __importDefault(require("axios"));
-const tough_cookie_1 = require("tough-cookie");
 const axios_cookiejar_support_1 = require("axios-cookiejar-support");
 const form_data_1 = __importDefault(require("form-data"));
-const headers_1 = require("./headers");
+const tough_cookie_1 = require("tough-cookie");
 const constants_1 = require("./constants");
+const headers_1 = require("./headers");
 const jar = new tough_cookie_1.CookieJar();
 const client = (0, axios_cookiejar_support_1.wrapper)(axios_1.default.create({ jar }));
 let proxyConfig = {};
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 function adaptResponse(res) {
     const response = res.response || res;
     return {
@@ -30,7 +30,7 @@ function adaptResponse(res) {
             headers: response.config.headers,
             method: response.config.method.toUpperCase(),
             form: response.config.data,
-            formData: response.config.data
+            formData: response.config.data,
         },
     };
 }
@@ -62,16 +62,18 @@ function setProxy(proxyUrl) {
                 proxy: {
                     host: parsedProxy.hostname,
                     port: parsedProxy.port,
-                    protocol: parsedProxy.protocol.replace(":", ""),
-                    auth: parsedProxy.username && parsedProxy.password ? {
-                        username: parsedProxy.username,
-                        password: parsedProxy.password,
-                    } : undefined,
+                    protocol: parsedProxy.protocol.replace(':', ''),
+                    auth: parsedProxy.username && parsedProxy.password
+                        ? {
+                            username: parsedProxy.username,
+                            password: parsedProxy.password,
+                        }
+                        : undefined,
                 },
             };
         }
         catch (e) {
-            console.error("Invalid proxy URL.");
+            console.error('Invalid proxy URL.');
             proxyConfig = {};
         }
     }
@@ -96,8 +98,8 @@ async function get(url, reqJar, qs, options, ctx, customHeader) {
 async function post(url, reqJar, form, options, ctx, customHeader) {
     const headers = (0, headers_1.getHeaders)(url, options, ctx, customHeader);
     let data = form;
-    let contentType = headers["Content-Type"] || "application/x-www-form-urlencoded";
-    if (contentType.includes("json")) {
+    let contentType = headers['Content-Type'] || 'application/x-www-form-urlencoded';
+    if (contentType.includes('json')) {
         data = JSON.stringify(form);
     }
     else {
@@ -105,7 +107,7 @@ async function post(url, reqJar, form, options, ctx, customHeader) {
         for (const key in form) {
             if (form.hasOwnProperty(key)) {
                 let value = form[key];
-                if ((0, constants_1.getType)(value) === "Object") {
+                if ((0, constants_1.getType)(value) === 'Object') {
                     value = JSON.stringify(value);
                 }
                 transformedForm.append(key, value);
@@ -113,7 +115,7 @@ async function post(url, reqJar, form, options, ctx, customHeader) {
         }
         data = transformedForm.toString();
     }
-    headers["Content-Type"] = contentType;
+    headers['Content-Type'] = contentType;
     const config = {
         headers,
         timeout: 60000,
@@ -129,7 +131,9 @@ async function postFormData(url, reqJar, form, qs, options, ctx) {
             formData.append(key, form[key]);
         }
     }
-    const customHeader = { "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}` };
+    const customHeader = {
+        'Content-Type': `multipart/form-data; boundary=${formData.getBoundary()}`,
+    };
     const config = {
         headers: (0, headers_1.getHeaders)(url, options, ctx, customHeader),
         timeout: 60000,

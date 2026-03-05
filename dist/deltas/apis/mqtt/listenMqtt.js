@@ -5,22 +5,35 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = default_1;
 const utils = require("../../../utils");
+const events_1 = require("events");
+const https_proxy_agent_1 = __importDefault(require("https-proxy-agent"));
 const mqtt_1 = __importDefault(require("mqtt"));
 const websocket_stream_1 = __importDefault(require("websocket-stream"));
-const https_proxy_agent_1 = __importDefault(require("https-proxy-agent"));
-const events_1 = require("events");
 const value_1 = require("./deltas/value");
 let form = {};
 let getSeqID;
 const topics = [
-    "/legacy_web", "/webrtc", "/rtc_multi", "/onevc", "/br_sr", "/sr_res",
-    "/t_ms", "/thread_typing", "/orca_typing_notifications", "/notify_disconnect",
-    "/orca_presence", "/inbox", "/mercury", "/messaging_events",
-    "/orca_message_notifications", "/pp", "/webrtc_response"
+    '/legacy_web',
+    '/webrtc',
+    '/rtc_multi',
+    '/onevc',
+    '/br_sr',
+    '/sr_res',
+    '/t_ms',
+    '/thread_typing',
+    '/orca_typing_notifications',
+    '/notify_disconnect',
+    '/orca_presence',
+    '/inbox',
+    '/mercury',
+    '/messaging_events',
+    '/orca_message_notifications',
+    '/pp',
+    '/webrtc_response',
 ];
 function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        var r = (Math.random() * 16) | 0, v = c == 'x' ? r : (r & 0x3) | 0x8;
         return v.toString(16);
     });
 }
@@ -41,7 +54,7 @@ function markAsRead(ctx, api, threadID) {
     if (ctx.globalOptions.autoMarkRead && threadID) {
         api.markAsRead(threadID, (err) => {
             if (err)
-                utils.error("autoMarkRead", err);
+                utils.error('autoMarkRead', err);
         });
     }
 }
@@ -74,18 +87,18 @@ async function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
         no_auto_fg: true,
         gas: null,
         pack: [],
-        a: ctx.globalOptions.userAgent
+        a: ctx.globalOptions.userAgent,
     };
     const cookies = ctx.jar.getCookiesSync('https://www.facebook.com').join('; ');
     let host;
-    const domain = "wss://edge-chat.messenger.com/chat";
+    const domain = 'wss://edge-chat.messenger.com/chat';
     if (region) {
         host = `${domain}?region=${region.toLowerCase()}&sid=${sessionID}&cid=${cid}`;
     }
     else {
         host = `${domain}?sid=${sessionID}&cid=${cid}`;
     }
-    utils.log("Connecting to MQTT with new IDs...", host);
+    utils.log('Connecting to MQTT with new IDs...', host);
     const options = {
         clientId: 'mqttwsclient',
         protocolId: 'MQIsdp',
@@ -94,24 +107,24 @@ async function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
         clean: true,
         wsOptions: {
             headers: {
-                'Cookie': cookies,
-                'Origin': 'https://www.messenger.com',
+                Cookie: cookies,
+                Origin: 'https://www.messenger.com',
                 'User-Agent': username.a,
-                'Referer': 'https://www.messenger.com/',
-                'Host': new URL(host).hostname
+                Referer: 'https://www.messenger.com/',
+                Host: new URL(host).hostname,
             },
             origin: 'https://www.messenger.com',
             protocolVersion: 13,
-            binaryType: 'arraybuffer'
+            binaryType: 'arraybuffer',
         },
         keepalive: 10,
         reschedulePings: true,
         connectTimeout: 60000,
-        reconnectPeriod: 1000
+        reconnectPeriod: 1000,
     };
     if (ctx.globalOptions.proxy)
         options.wsOptions.agent = new https_proxy_agent_1.default(ctx.globalOptions.proxy);
-    const mqttClient = new mqtt_1.default.Client(_ => (0, websocket_stream_1.default)(host, options.wsOptions), options);
+    const mqttClient = new mqtt_1.default.Client((_) => (0, websocket_stream_1.default)(host, options.wsOptions), options);
     mqttClient.publishSync = mqttClient.publish.bind(mqttClient);
     mqttClient.publish = (topic, message, opts = {}, callback = () => { }) => new Promise((resolve, reject) => {
         mqttClient.publishSync(topic, message, opts, (err, data) => {
@@ -125,29 +138,35 @@ async function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
     });
     ctx.mqttClient = mqttClient;
     mqttClient.on('error', (err) => {
-        utils.error("listenMqtt", err);
+        utils.error('listenMqtt', err);
         mqttClient.end();
         if (ctx.globalOptions.autoReconnect)
             getSeqID();
         else
-            globalCallback({ type: "stop_listen", error: "Connection refused" });
+            globalCallback({ type: 'stop_listen', error: 'Connection refused' });
     });
     mqttClient.on('connect', async () => {
-        topics.forEach(topic => mqttClient.subscribe(topic));
-        const queue = { sync_api_version: 10, max_deltas_able_to_process: 1000, delta_batch_size: 500, encoding: "JSON", entity_fbid: ctx.userID };
+        topics.forEach((topic) => mqttClient.subscribe(topic));
+        const queue = {
+            sync_api_version: 10,
+            max_deltas_able_to_process: 1000,
+            delta_batch_size: 500,
+            encoding: 'JSON',
+            entity_fbid: ctx.userID,
+        };
         let topic;
         if (ctx.syncToken) {
-            topic = "/messenger_sync_get_diffs";
+            topic = '/messenger_sync_get_diffs';
             queue.last_seq_id = ctx.lastSeqId;
             queue.sync_token = ctx.syncToken;
         }
         else {
-            topic = "/messenger_sync_create_queue";
+            topic = '/messenger_sync_create_queue';
             queue.initial_titan_sequence_id = ctx.lastSeqId;
             queue.device_params = null;
         }
         utils.log(`Successfully connected to MQTT.`);
-        const { name: botName = "Facebook User", uid = ctx.userID } = await api.getBotInitialData();
+        const { name: botName = 'Facebook User', uid = ctx.userID, } = await api.getBotInitialData();
         utils.log(`Hello, ${botName} (${uid})`);
         mqttClient.publish(topic, JSON.stringify(queue), { qos: 1, retain: false });
     });
@@ -156,9 +175,9 @@ async function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
         presenceInterval = setInterval(() => {
             if (mqttClient.connected) {
                 const presencePayload = utils.generatePresence(ctx.userID);
-                mqttClient.publish('/orca_presence', JSON.stringify({ "p": presencePayload }), (err) => {
+                mqttClient.publish('/orca_presence', JSON.stringify({ p: presencePayload }), (err) => {
                     if (err) {
-                        utils.error("Failed to send presence update:", err);
+                        utils.error('Failed to send presence update:', err);
                     }
                 });
             }
@@ -168,7 +187,7 @@ async function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
         try {
             const jsonMessage = JSON.parse(message.toString());
             //const packet = JSON.parse(_packet.payload.toString());
-            if (topic === "/t_ms") {
+            if (topic === '/t_ms') {
                 if (jsonMessage.lastIssuedSeqId) {
                     ctx.lastSeqId = parseInt(jsonMessage.lastIssuedSeqId);
                 }
@@ -178,18 +197,19 @@ async function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
                     }
                 }
             }
-            else if (topic === "/thread_typing" || topic === "/orca_typing_notifications") {
+            else if (topic === '/thread_typing' ||
+                topic === '/orca_typing_notifications') {
                 const typ = {
-                    type: "typ",
+                    type: 'typ',
                     isTyping: !!jsonMessage.state,
                     from: jsonMessage.sender_fbid.toString(),
-                    threadID: utils.formatID((jsonMessage.thread || jsonMessage.sender_fbid).toString())
+                    threadID: utils.formatID((jsonMessage.thread || jsonMessage.sender_fbid).toString()),
                 };
                 globalCallback(null, typ);
             }
         }
         catch (ex) {
-            utils.error("listenMqtt: onMessage", ex);
+            utils.error('listenMqtt: onMessage', ex);
         }
     });
 }
@@ -199,27 +219,31 @@ function default_1(defaultFuncs, api, ctx) {
     getSeqID = async () => {
         try {
             form = {
-                "queries": JSON.stringify({
-                    "o0": {
-                        "doc_id": "3336396659757871",
-                        "query_params": {
-                            "limit": 1,
-                            "before": null,
-                            "tags": ["INBOX"],
-                            "includeDeliveryReceipts": false,
-                            "includeSeqID": true
-                        }
-                    }
-                })
+                queries: JSON.stringify({
+                    o0: {
+                        doc_id: '3336396659757871',
+                        query_params: {
+                            limit: 1,
+                            before: null,
+                            tags: ['INBOX'],
+                            includeDeliveryReceipts: false,
+                            includeSeqID: true,
+                        },
+                    },
+                }),
             };
-            const resData = await defaultFuncs.post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form).then(utils.parseAndCheckLogin(ctx, defaultFuncs));
-            if (utils.getType(resData) != "Array" || (resData.error && resData.error !== 1357001))
+            const resData = await defaultFuncs
+                .post('https://www.facebook.com/api/graphqlbatch/', ctx.jar, form)
+                .then(utils.parseAndCheckLogin(ctx, defaultFuncs));
+            if (utils.getType(resData) != 'Array' ||
+                (resData.error && resData.error !== 1357001))
                 throw resData;
-            ctx.lastSeqId = resData[0].o0.data.viewer.message_threads.sync_sequence_id;
+            ctx.lastSeqId =
+                resData[0].o0.data.viewer.message_threads.sync_sequence_id;
             listenMqtt(defaultFuncs, api, ctx, globalCallback);
         }
         catch (err) {
-            const descriptiveError = new Error("Failed to get sequence ID. This is often caused by an invalid appstate. Please try generating a new appstate.json file.");
+            const descriptiveError = new Error('Failed to get sequence ID. This is often caused by an invalid appstate. Please try generating a new appstate.json file.');
             descriptiveError.originalError = err;
             return globalCallback(descriptiveError);
         }
@@ -242,11 +266,11 @@ function default_1(defaultFuncs, api, ctx) {
         const msgEmitter = new MessageEmitter();
         globalCallback = (error, message) => {
             if (error)
-                return msgEmitter.emit("error", error);
-            if (message.type === "message" || message.type === "message_reply") {
+                return msgEmitter.emit('error', error);
+            if (message.type === 'message' || message.type === 'message_reply') {
                 markAsRead(ctx, api, message.threadID);
             }
-            msgEmitter.emit("message", message);
+            msgEmitter.emit('message', message);
         };
         if (typeof callback === 'function')
             globalCallback = callback;
@@ -259,7 +283,7 @@ function default_1(defaultFuncs, api, ctx) {
                 await api.markAsReadAll();
             }
             catch (err) {
-                utils.error("Failed to mark all messages as read on startup:", err);
+                utils.error('Failed to mark all messages as read on startup:', err);
             }
         }
         ctx.firstListen = false;
@@ -279,5 +303,4 @@ function default_1(defaultFuncs, api, ctx) {
         return msgEmitter;
     };
 }
-;
 //# sourceMappingURL=listenMqtt.js.map

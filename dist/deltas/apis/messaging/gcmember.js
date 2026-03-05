@@ -28,7 +28,7 @@ function default_1(defaultFuncs, api, ctx) {
             resolvePromise = resolve;
             rejectPromise = reject;
         });
-        if (typeof _callback != "function") {
+        if (typeof _callback != 'function') {
             _callback = (err, data) => {
                 // Note: We will now rarely use the 'err' parameter for validation errors
                 if (err)
@@ -37,27 +37,45 @@ function default_1(defaultFuncs, api, ctx) {
             };
         }
         try {
-            const validActions = ["add", "remove"];
-            action = action ? action.toLowerCase() : "";
+            const validActions = ['add', 'remove'];
+            action = action ? action.toLowerCase() : '';
             // --- ERROR CHECKS NOW RETURN AN OBJECT INSTEAD OF THROWING ---
             if (!validActions.includes(action)) {
-                return _callback(null, { type: "error_gc", error: `Invalid action. Must be one of: ${validActions.join(", ")}` });
+                return _callback(null, {
+                    type: 'error_gc',
+                    error: `Invalid action. Must be one of: ${validActions.join(', ')}`,
+                });
             }
             if (!userIDs || userIDs.length === 0) {
-                return _callback(null, { type: "error_gc", error: "userIDs is required." });
+                return _callback(null, {
+                    type: 'error_gc',
+                    error: 'userIDs is required.',
+                });
             }
             if (!threadID) {
-                return _callback(null, { type: "error_gc", error: "threadID is required." });
+                return _callback(null, {
+                    type: 'error_gc',
+                    error: 'threadID is required.',
+                });
             }
             if (!ctx.mqttClient) {
-                return _callback(null, { type: "error_gc", error: "Not connected to MQTT" });
+                return _callback(null, {
+                    type: 'error_gc',
+                    error: 'Not connected to MQTT',
+                });
             }
             const threadInfo = await api.getThreadInfo(threadID);
             if (!threadInfo) {
-                return _callback(null, { type: "error_gc", error: "Could not retrieve thread information." });
+                return _callback(null, {
+                    type: 'error_gc',
+                    error: 'Could not retrieve thread information.',
+                });
             }
             if (threadInfo.isGroup === false) {
-                return _callback(null, { type: "error_gc", error: "This feature is only for group chats, not private messages." });
+                return _callback(null, {
+                    type: 'error_gc',
+                    error: 'This feature is only for group chats, not private messages.',
+                });
             }
             const currentMembers = threadInfo.participantIDs;
             const usersToModify = Array.isArray(userIDs) ? userIDs : [userIDs];
@@ -66,35 +84,64 @@ function default_1(defaultFuncs, api, ctx) {
             ctx.wsReqNumber = (ctx.wsReqNumber || 0) + 1;
             ctx.wsTaskNumber = (ctx.wsTaskNumber || 0) + 1;
             if (action === 'add') {
-                const usersToAdd = usersToModify.filter(id => !currentMembers.includes(id));
+                const usersToAdd = usersToModify.filter((id) => !currentMembers.includes(id));
                 if (usersToAdd.length === 0) {
-                    return _callback(null, { type: "error_gc", error: "All specified users are already in the group." });
+                    return _callback(null, {
+                        type: 'error_gc',
+                        error: 'All specified users are already in the group.',
+                    });
                 }
                 finalUsers = usersToAdd;
-                queryPayload = { thread_key: parseInt(threadID), contact_ids: finalUsers.map(id => parseInt(id)), sync_group: 1 };
-                query = { label: "23", payload: JSON.stringify(queryPayload), queue_name: threadID, task_id: ctx.wsTaskNumber };
+                queryPayload = {
+                    thread_key: parseInt(threadID),
+                    contact_ids: finalUsers.map((id) => parseInt(id)),
+                    sync_group: 1,
+                };
+                query = {
+                    label: '23',
+                    payload: JSON.stringify(queryPayload),
+                    queue_name: threadID,
+                    task_id: ctx.wsTaskNumber,
+                };
             }
-            else { // action is 'remove'
+            else {
+                // action is 'remove'
                 const userToRemove = usersToModify[0];
                 if (!currentMembers.includes(userToRemove)) {
-                    return _callback(null, { type: "error_gc", error: `User with ID ${userToRemove} is not in this group chat.` });
+                    return _callback(null, {
+                        type: 'error_gc',
+                        error: `User with ID ${userToRemove} is not in this group chat.`,
+                    });
                 }
                 finalUsers = [userToRemove];
-                queryPayload = { thread_id: threadID, contact_id: userToRemove, sync_group: 1 };
-                query = { label: "140", payload: JSON.stringify(queryPayload), queue_name: "remove_participant_v2", task_id: ctx.wsTaskNumber };
+                queryPayload = {
+                    thread_id: threadID,
+                    contact_id: userToRemove,
+                    sync_group: 1,
+                };
+                query = {
+                    label: '140',
+                    payload: JSON.stringify(queryPayload),
+                    queue_name: 'remove_participant_v2',
+                    task_id: ctx.wsTaskNumber,
+                };
             }
             const context = {
                 app_id: ctx.appID,
-                payload: { epoch_id: parseInt(utils.generateOfflineThreadingID()), tasks: [query], version_id: "24631415369801570" },
+                payload: {
+                    epoch_id: parseInt(utils.generateOfflineThreadingID()),
+                    tasks: [query],
+                    version_id: '24631415369801570',
+                },
                 request_id: ctx.wsReqNumber,
-                type: 3
+                type: 3,
             };
             context.payload = JSON.stringify(context.payload);
             ctx.mqttClient.publish('/ls_req', JSON.stringify(context), { qos: 1, retain: false }, (err) => {
                 if (err)
                     return _callback(err); // For network errors, we still reject
                 const gcmemberInfo = {
-                    type: "gc_member_update",
+                    type: 'gc_member_update',
                     threadID: threadID,
                     userIDs: finalUsers,
                     action: action,
@@ -106,10 +153,12 @@ function default_1(defaultFuncs, api, ctx) {
             });
         }
         catch (err) {
-            return _callback(null, { type: "error_gc", error: err.message || "An unknown error occurred." });
+            return _callback(null, {
+                type: 'error_gc',
+                error: err.message || 'An unknown error occurred.',
+            });
         }
         return returnPromise;
     };
 }
-;
 //# sourceMappingURL=gcmember.js.map

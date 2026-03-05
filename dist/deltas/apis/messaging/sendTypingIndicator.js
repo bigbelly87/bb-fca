@@ -1,5 +1,5 @@
 // @ChoruOfficial
-"use strict";
+'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = default_1;
 /**
@@ -25,18 +25,17 @@ function default_1(defaultFuncs, api, ctx) {
                     thread_key: threadID.toString(),
                     is_group_thread: +(threadID.toString().length >= 16),
                     is_typing: +sendTyping,
-                    attribution: 0
+                    attribution: 0,
                 }),
-                version: 5849951561777440
+                version: 5849951561777440,
             }),
             request_id: ++count_req,
-            type: 4
+            type: 4,
         };
-        await new Promise((resolve, reject) => ctx.mqttClient.publish('/ls_req', JSON.stringify(wsContent), {}, (err, _packet) => err ? reject(err) : resolve()));
+        await new Promise((resolve, reject) => ctx.mqttClient.publish('/ls_req', JSON.stringify(wsContent), {}, (err, _packet) => (err ? reject(err) : resolve())));
         if (callback) {
             callback();
         }
     };
 }
-;
 //# sourceMappingURL=sendTypingIndicator.js.map

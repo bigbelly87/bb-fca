@@ -23,16 +23,18 @@ function default_1(defaultFuncs, api, ctx) {
             _resolvePromise = resolve;
             _rejectPromise = reject;
         });
-        if (utils.getType(callback) === "Function" || utils.getType(callback) === "AsyncFunction") {
+        if (utils.getType(callback) === 'Function' ||
+            utils.getType(callback) === 'AsyncFunction') {
             _callback = callback;
             _initiatorID = initiatorID;
         }
-        else if (utils.getType(threadID) === "Function" || utils.getType(threadID) === "AsyncFunction") {
+        else if (utils.getType(threadID) === 'Function' ||
+            utils.getType(threadID) === 'AsyncFunction') {
             _callback = threadID;
             threadID = null;
             _initiatorID = callback;
         }
-        else if (utils.getType(callback) === "string") {
+        else if (utils.getType(callback) === 'string') {
             _initiatorID = callback;
             _callback = undefined;
         }
@@ -64,13 +66,13 @@ function default_1(defaultFuncs, api, ctx) {
         _initiatorID = _initiatorID || ctx.userID;
         threadID = threadID || ctx.threadID;
         if (!threadID) {
-            return _callback(new Error("threadID is required to set an emoji."));
+            return _callback(new Error('threadID is required to set an emoji.'));
         }
         if (!emoji) {
-            return _callback(new Error("An emoji character is required."));
+            return _callback(new Error('An emoji character is required.'));
         }
         if (!ctx.mqttClient) {
-            return _callback(new Error("Not connected to MQTT"));
+            return _callback(new Error('Not connected to MQTT'));
         }
         ctx.wsReqNumber += 1;
         ctx.wsTaskNumber += 1;
@@ -103,7 +105,7 @@ function default_1(defaultFuncs, api, ctx) {
                 return _callback(new Error(`MQTT publish failed for emoji: ${err.message || err}`));
             }
             const emojiChangeEvent = {
-                type: "thread_emoji_update",
+                type: 'thread_emoji_update',
                 threadID: threadID,
                 newEmoji: emoji,
                 senderID: _initiatorID,
@@ -115,5 +117,4 @@ function default_1(defaultFuncs, api, ctx) {
         return returnPromise;
     };
 }
-;
 //# sourceMappingURL=emoji.js.map

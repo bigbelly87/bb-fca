@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = default_1;
 const utils = require("../../../utils");
-const delay = async (ms) => await new Promise(res => setTimeout(res, ms));
+const delay = async (ms) => await new Promise((res) => setTimeout(res, ms));
 function default_1(defaultFuncs, api, ctx) {
     /**
      * Uploads an attachment to Facebook's servers.
@@ -14,31 +14,35 @@ function default_1(defaultFuncs, api, ctx) {
         var uploads = [];
         for (var i = 0; i < attachments.length; i++) {
             if (!utils.isReadableStream(attachments[i])) {
-                throw { error: "Attachment should be a readable stream and not " + utils.getType(attachments[i]) + "." };
+                throw {
+                    error: 'Attachment should be a readable stream and not ' +
+                        utils.getType(attachments[i]) +
+                        '.',
+                };
             }
             var form = {
                 upload_1024: attachments[i],
-                voice_clip: "true",
+                voice_clip: 'true',
             };
             uploads.push(defaultFuncs
-                .postFormData("https://upload.facebook.com/ajax/mercury/upload.php", ctx.jar, form, {})
+                .postFormData('https://upload.facebook.com/ajax/mercury/upload.php', ctx.jar, form, {})
                 .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
-                .then(resData => {
+                .then((resData) => {
                 if (resData.error)
                     throw resData;
                 return resData.payload.metadata[0];
             }));
         }
         Promise.all(uploads)
-            .then(resData => callback(null, resData))
-            .catch(err => {
-            utils.error("uploadAttachment", err);
+            .then((resData) => callback(null, resData))
+            .catch((err) => {
+            utils.error('uploadAttachment', err);
             return callback(err);
         });
     }
     function getSendPayload(threadID, msg, otid) {
         const isString = typeof msg === 'string';
-        const body = isString ? msg : msg.body || "";
+        const body = isString ? msg : msg.body || '';
         otid = otid.toString() || utils.generateOfflineThreadingID().toString();
         let payload = {
             thread_id: threadID.toString(),
@@ -58,7 +62,9 @@ function default_1(defaultFuncs, api, ctx) {
             }
             if (msg.attachment) {
                 payload.send_type = 3;
-                payload.attachment_fbids = Array.isArray(msg.attachment) ? msg.attachment : [msg.attachment];
+                payload.attachment_fbids = Array.isArray(msg.attachment)
+                    ? msg.attachment
+                    : [msg.attachment];
             }
         }
         return payload;
@@ -75,15 +81,17 @@ function default_1(defaultFuncs, api, ctx) {
      */
     return async (msg, threadID, replyToMessage, callback) => {
         if (typeof msg !== 'string' && typeof msg !== 'object') {
-            throw new Error("Message should be of type string or object, not " + utils.getType(msg) + ".");
+            throw new Error('Message should be of type string or object, not ' +
+                utils.getType(msg) +
+                '.');
         }
         if (typeof threadID !== 'string' && typeof threadID !== 'number') {
-            throw new Error("threadID must be a string or number.");
+            throw new Error('threadID must be a string or number.');
         }
-        if (!callback && typeof threadID === "function") {
-            throw new Error("Pass a threadID as a second argument.");
+        if (!callback && typeof threadID === 'function') {
+            throw new Error('Pass a threadID as a second argument.');
         }
-        if (!callback && typeof replyToMessage === "function") {
+        if (!callback && typeof replyToMessage === 'function') {
             callback = replyToMessage;
             replyToMessage = null;
         }
@@ -104,14 +112,16 @@ function default_1(defaultFuncs, api, ctx) {
         const otid = utils.generateOfflineThreadingID();
         const epoch_id = utils.generateOfflineThreadingID();
         const payload = getSendPayload(threadID, msg, otid);
-        const tasks = [{
-                label: "46",
+        const tasks = [
+            {
+                label: '46',
                 payload,
                 queue_name: threadID.toString(),
                 task_id: 0,
                 failure_count: null,
-            }, {
-                label: "21",
+            },
+            {
+                label: '21',
                 payload: {
                     thread_id: threadID.toString(),
                     last_read_watermark_ts: timestamp,
@@ -120,7 +130,8 @@ function default_1(defaultFuncs, api, ctx) {
                 queue_name: threadID.toString(),
                 task_id: 1,
                 failure_count: null,
-            }];
+            },
+        ];
         if (replyToMessage) {
             tasks[0].payload.reply_metadata = {
                 reply_source_id: replyToMessage,
@@ -129,11 +140,11 @@ function default_1(defaultFuncs, api, ctx) {
             };
         }
         const form = {
-            app_id: "2220391788200892",
+            app_id: '2220391788200892',
             payload: {
                 tasks,
                 epoch_id,
-                version_id: "6120284488008082",
+                version_id: '6120284488008082',
                 data_trace_id: null,
             },
             request_id: 1,
@@ -148,27 +159,26 @@ function default_1(defaultFuncs, api, ctx) {
                         return resolve(files);
                     });
                 });
-                form.payload.tasks[0].payload.attachment_fbids = files.map(file => Object.values(file)[0]);
+                form.payload.tasks[0].payload.attachment_fbids = files.map((file) => Object.values(file)[0]);
             }
             catch (err) {
-                utils.error("Attachment upload failed:", err);
+                utils.error('Attachment upload failed:', err);
                 throw new Error(err);
             }
         }
-        form.payload.tasks.forEach(task => {
+        form.payload.tasks.forEach((task) => {
             task.payload = JSON.stringify(task.payload);
         });
         form.payload = JSON.stringify(form.payload);
-        await ctx.mqttClient.publish("/ls_req", JSON.stringify(form), {
+        await ctx.mqttClient.publish('/ls_req', JSON.stringify(form), {
             qos: 1,
-            retain: false
+            retain: false,
         });
         callback(null, {
             threadID,
-            type: replyToMessage ? "message_reply" : "message"
+            type: replyToMessage ? 'message_reply' : 'message',
         });
         return returnPromise;
     };
 }
-;
 //# sourceMappingURL=sendMessageMqtt.js.map

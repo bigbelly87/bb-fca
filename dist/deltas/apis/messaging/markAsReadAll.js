@@ -15,11 +15,10 @@ function default_1(defaultFuncs, api, ctx) {
      */
     return async function markAsReadAll() {
         const form = {
-            folder: "inbox",
+            folder: 'inbox',
         };
         try {
-            const resData = await defaultFuncs
-                .post("https://www.facebook.com/ajax/mercury/mark_folder_as_read.php", ctx.jar, form);
+            const resData = await defaultFuncs.post('https://www.facebook.com/ajax/mercury/mark_folder_as_read.php', ctx.jar, form);
             const parsedData = utils.parseAndCheckLogin(resData, defaultFuncs);
             if (parsedData.error) {
                 throw parsedData;
@@ -27,10 +26,9 @@ function default_1(defaultFuncs, api, ctx) {
             return;
         }
         catch (err) {
-            utils.error("markAsReadAll", err);
+            utils.error('markAsReadAll', err);
             throw err;
         }
     };
 }
-;
 //# sourceMappingURL=markAsReadAll.js.map

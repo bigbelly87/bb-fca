@@ -1,4 +1,4 @@
-import { EventEmitter } from "events";
+import { EventEmitter } from 'events';
 export default function (defaultFuncs: any, api: any, ctx: any): (callback: any) => {
     listener: any;
     stop(): void;

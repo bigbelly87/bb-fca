@@ -37,27 +37,27 @@ function default_1(defaultFuncs, api, ctx) {
      */
     async function sendStoryReply(storyIdOrUrl, message, isReaction) {
         try {
-            const allowedReactions = ["❤️", "👍", "🤗", "😆", "😡", "😢", "😮"];
+            const allowedReactions = ['❤️', '👍', '🤗', '😆', '😡', '😢', '😮'];
             if (!storyIdOrUrl)
-                throw new Error("Story ID or URL is required.");
+                throw new Error('Story ID or URL is required.');
             if (!message)
-                throw new Error("A message or reaction is required.");
+                throw new Error('A message or reaction is required.');
             let storyID = getStoryIDFromURL(storyIdOrUrl);
             if (!storyID)
                 storyID = storyIdOrUrl;
             const variables = {
                 input: {
-                    attribution_id_v2: "StoriesCometSuspenseRoot.react,comet.stories.viewer,via_cold_start",
+                    attribution_id_v2: 'StoriesCometSuspenseRoot.react,comet.stories.viewer,via_cold_start',
                     message: message,
                     story_id: storyID,
-                    story_reply_type: isReaction ? "LIGHT_WEIGHT" : "TEXT",
+                    story_reply_type: isReaction ? 'LIGHT_WEIGHT' : 'TEXT',
                     actor_id: ctx.userID,
-                    client_mutation_id: Math.floor(Math.random() * 10 + 1).toString()
-                }
+                    client_mutation_id: Math.floor(Math.random() * 10 + 1).toString(),
+                },
             };
             if (isReaction) {
                 if (!allowedReactions.includes(message)) {
-                    throw new Error(`Invalid reaction. Please use one of: ${allowedReactions.join(" ")}`);
+                    throw new Error(`Invalid reaction. Please use one of: ${allowedReactions.join(' ')}`);
                 }
                 variables.input.lightweight_reaction_actions = {
                     offsets: [0],
@@ -67,15 +67,15 @@ function default_1(defaultFuncs, api, ctx) {
             const form = {
                 av: ctx.userID,
                 __user: ctx.userID,
-                __a: "1",
+                __a: '1',
                 fb_dtsg: ctx.fb_dtsg,
                 jazoest: ctx.jazoest,
-                fb_api_caller_class: "RelayModern",
-                fb_api_req_friendly_name: "useStoriesSendReplyMutation",
+                fb_api_caller_class: 'RelayModern',
+                fb_api_req_friendly_name: 'useStoriesSendReplyMutation',
                 variables: JSON.stringify(variables),
-                doc_id: "9697491553691692"
+                doc_id: '9697491553691692',
             };
-            const res = await defaultFuncs.post("https://www.facebook.com/api/graphql/", ctx.jar, form, {});
+            const res = await defaultFuncs.post('https://www.facebook.com/api/graphql/', ctx.jar, form, {});
             if (res.data.errors)
                 throw new Error(JSON.stringify(res.data.errors));
             const storyReplyData = res.data?.data?.direct_message_reply;
@@ -84,7 +84,7 @@ function default_1(defaultFuncs, api, ctx) {
             return { success: true, result: storyReplyData };
         }
         catch (err) {
-            console.error("Error in story reply API:", err);
+            console.error('Error in story reply API:', err);
             throw err;
         }
     }
@@ -95,18 +95,18 @@ function default_1(defaultFuncs, api, ctx) {
      * @param {string} [backgroundName="blue"] The name of the background to use. Options: `orange`, `blue`, `green`, `modern`.
      * @returns {Promise<{success: boolean, storyID: string}>} A promise that resolves with the new story's ID.
      */
-    async function create(message, fontName = "classic", backgroundName = "blue") {
+    async function create(message, fontName = 'classic', backgroundName = 'blue') {
         const fontMap = {
-            headline: "1919119914775364",
-            classic: "516266749248495",
-            casual: "516266749248495",
-            fancy: "1790435664339626"
+            headline: '1919119914775364',
+            classic: '516266749248495',
+            casual: '516266749248495',
+            fancy: '1790435664339626',
         };
         const bgMap = {
-            orange: "2163607613910521",
-            blue: "401372137331149",
-            green: "367314917184744",
-            modern: "554617635055752"
+            orange: '2163607613910521',
+            blue: '401372137331149',
+            green: '367314917184744',
+            modern: '554617635055752',
         };
         const fontId = fontMap[fontName.toLowerCase()] || fontMap.classic;
         const bgId = bgMap[backgroundName.toLowerCase()] || bgMap.blue;
@@ -114,31 +114,34 @@ function default_1(defaultFuncs, api, ctx) {
             input: {
                 audiences: [{ stories: { self: { target_id: ctx.userID } } }],
                 audiences_is_complete: true,
-                logging: { composer_session_id: "createStoriesText-" + Date.now() },
-                navigation_data: { attribution_id_v2: "StoriesCreateRoot.react,comet.stories.create" },
-                source: "WWW",
+                logging: { composer_session_id: 'createStoriesText-' + Date.now() },
+                navigation_data: {
+                    attribution_id_v2: 'StoriesCreateRoot.react,comet.stories.create',
+                },
+                source: 'WWW',
                 message: { ranges: [], text: message },
                 text_format_metadata: { inspirations_custom_font_id: fontId },
                 text_format_preset_id: bgId,
                 tracking: [null],
                 actor_id: ctx.userID,
-                client_mutation_id: "2"
-            }
+                client_mutation_id: '2',
+            },
         };
         const form = {
-            __a: "1",
-            fb_api_caller_class: "RelayModern",
-            fb_api_req_friendly_name: "StoriesCreateMutation",
+            __a: '1',
+            fb_api_caller_class: 'RelayModern',
+            fb_api_req_friendly_name: 'StoriesCreateMutation',
             variables: JSON.stringify(variables),
-            doc_id: "24226878183562473"
+            doc_id: '24226878183562473',
         };
         try {
-            const res = await defaultFuncs.post("https://www.facebook.com/api/graphql/", ctx.jar, form, {});
+            const res = await defaultFuncs.post('https://www.facebook.com/api/graphql/', ctx.jar, form, {});
             if (res.data.errors)
                 throw new Error(JSON.stringify(res.data.errors));
-            const storyNode = res.data?.data?.story_create?.viewer?.actor?.story_bucket?.nodes[0]?.first_story_to_show;
+            const storyNode = res.data?.data?.story_create?.viewer?.actor?.story_bucket?.nodes[0]
+                ?.first_story_to_show;
             if (!storyNode || !storyNode.id)
-                throw new Error("Could not find the storyCardID in the response.");
+                throw new Error('Could not find the storyCardID in the response.');
             return { success: true, storyID: storyNode.id };
         }
         catch (error) {
@@ -167,8 +170,7 @@ function default_1(defaultFuncs, api, ctx) {
          * @param {string} message The text message to send.
          * @returns {Promise<{success: boolean, result: object}>}
          */
-        msg: (storyIdOrUrl, message) => sendStoryReply(storyIdOrUrl, message, false)
+        msg: (storyIdOrUrl, message) => sendStoryReply(storyIdOrUrl, message, false),
     };
 }
-;
 //# sourceMappingURL=story.js.map

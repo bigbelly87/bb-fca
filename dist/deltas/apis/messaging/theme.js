@@ -25,16 +25,18 @@ function default_1(defaultFuncs, api, ctx) {
             _resolveFunc = resolve;
             _rejectFunc = reject;
         });
-        if (utils.getType(callback) === "Function" || utils.getType(callback) === "AsyncFunction") {
+        if (utils.getType(callback) === 'Function' ||
+            utils.getType(callback) === 'AsyncFunction') {
             _callback = callback;
             _initiatorID = initiatorID;
         }
-        else if (utils.getType(threadID) === "Function" || utils.getType(threadID) === "AsyncFunction") {
+        else if (utils.getType(threadID) === 'Function' ||
+            utils.getType(threadID) === 'AsyncFunction') {
             _callback = threadID;
             threadID = null;
             _initiatorID = callback;
         }
-        else if (utils.getType(callback) === "string") {
+        else if (utils.getType(callback) === 'string') {
             _initiatorID = callback;
             _callback = undefined;
         }
@@ -53,37 +55,38 @@ function default_1(defaultFuncs, api, ctx) {
         _initiatorID = _initiatorID || ctx.userID;
         threadID = threadID || ctx.threadID;
         if (!threadID) {
-            return _callback(new Error("threadID is required to manage themes."));
+            return _callback(new Error('threadID is required to manage themes.'));
         }
         if (!themeName) {
             return _callback(new Error("themeName (or 'list') is required."));
         }
         if (!ctx.mqttClient) {
-            return _callback(new Error("Not connected to MQTT"));
+            return _callback(new Error('Not connected to MQTT'));
         }
         const fetchThemes = async () => {
             const form = {
                 fb_api_caller_class: 'RelayModern',
                 fb_api_req_friendly_name: 'MWPThreadThemeQuery_AllThemesQuery',
-                variables: JSON.stringify({ version: "default" }),
+                variables: JSON.stringify({ version: 'default' }),
                 server_timestamps: true,
                 doc_id: '24474714052117636',
             };
             try {
                 const resData = await defaultFuncs
-                    .post("https://www.facebook.com/api/graphql/", ctx.jar, form, null, {
-                    "x-fb-friendly-name": "MWPThreadThemeQuery_AllThemesQuery",
-                    "x-fb-lsd": ctx.lsd,
-                    "referer": `https://www.facebook.com/messages/t/${threadID}`
+                    .post('https://www.facebook.com/api/graphql/', ctx.jar, form, null, {
+                    'x-fb-friendly-name': 'MWPThreadThemeQuery_AllThemesQuery',
+                    'x-fb-lsd': ctx.lsd,
+                    referer: `https://www.facebook.com/messages/t/${threadID}`,
                 })
                     .then(utils.parseAndCheckLogin(ctx, defaultFuncs));
                 if (resData.errors) {
                     throw new Error(JSON.stringify(resData.errors));
                 }
                 if (!resData.data || !resData.data.messenger_thread_themes) {
-                    throw new Error("Could not retrieve thread themes from response.");
+                    throw new Error('Could not retrieve thread themes from response.');
                 }
-                return resData.data.messenger_thread_themes.map(themeData => {
+                return resData.data.messenger_thread_themes
+                    .map((themeData) => {
                     if (!themeData || !themeData.id)
                         return null;
                     return {
@@ -113,7 +116,8 @@ function default_1(defaultFuncs, api, ctx) {
                         normalThemeId: themeData.normal_theme_id,
                         iconAsset: themeData.icon_asset?.image?.uri,
                     };
-                }).filter(Boolean);
+                })
+                    .filter(Boolean);
             }
             catch (fetchErr) {
                 throw new Error(`Failed to fetch theme list: ${fetchErr.message || fetchErr}`);
@@ -130,7 +134,7 @@ function default_1(defaultFuncs, api, ctx) {
                     thread_key: threadID.toString(),
                     theme_fbid: themeIDToSet.toString(),
                     sync_group: 1,
-                    ...payload
+                    ...payload,
                 };
                 const query = {
                     failure_count: null,
@@ -151,7 +155,7 @@ function default_1(defaultFuncs, api, ctx) {
                 };
                 context.payload = JSON.stringify(context.payload);
                 return new Promise((res, rej) => {
-                    ctx.mqttClient.publish('/ls_req', JSON.stringify(context), { qos: 1, retain: false }, err => {
+                    ctx.mqttClient.publish('/ls_req', JSON.stringify(context), { qos: 1, retain: false }, (err) => {
                         if (err) {
                             return rej(new Error(`MQTT publish failed for request ${request_id}: ${err.message}`));
                         }
@@ -164,10 +168,13 @@ function default_1(defaultFuncs, api, ctx) {
                     createAndPublish('1013', `ai_generated_theme`, {}),
                     createAndPublish('1037', `msgr_custom_thread_theme`, {}),
                     createAndPublish('1028', `thread_theme_writer`, {}),
-                    createAndPublish('43', `thread_theme`, { source: null, payload: null })
+                    createAndPublish('43', `thread_theme`, {
+                        source: null,
+                        payload: null,
+                    }),
                 ]);
                 return {
-                    type: "thread_theme_update",
+                    type: 'thread_theme_update',
                     threadID: threadID,
                     themeID: themeIDToSet,
                     themeName: actualThemeName,
@@ -177,11 +184,12 @@ function default_1(defaultFuncs, api, ctx) {
                 };
             }
             catch (publishErr) {
-                throw new Error(`Failed to publish theme change MQTT messages: ${publishErr.message || publishErr}`);
+                throw new Error(`Failed to publish theme change MQTT messages: ${publishErr.message ||
+                    publishErr}`);
             }
         };
         try {
-            if (themeName.toLowerCase() === "list") {
+            if (themeName.toLowerCase() === 'list') {
                 const themes = await fetchThemes();
                 _callback(null, themes);
             }
@@ -190,13 +198,13 @@ function default_1(defaultFuncs, api, ctx) {
                 const normalizedThemeName = themeName.toLowerCase();
                 let matchedTheme = null;
                 if (!isNaN(normalizedThemeName)) {
-                    matchedTheme = themes.find(t => t.id === normalizedThemeName);
+                    matchedTheme = themes.find((t) => t.id === normalizedThemeName);
                 }
                 if (!matchedTheme) {
-                    matchedTheme = themes.find(t => t.name.toLowerCase() === normalizedThemeName);
+                    matchedTheme = themes.find((t) => t.name.toLowerCase() === normalizedThemeName);
                 }
                 if (!matchedTheme) {
-                    matchedTheme = themes.find(t => t.name.toLowerCase().includes(normalizedThemeName));
+                    matchedTheme = themes.find((t) => t.name.toLowerCase().includes(normalizedThemeName));
                 }
                 if (!matchedTheme) {
                     throw new Error(`Theme "${themeName}" not found. Try '/theme list' for available themes.`);
@@ -206,11 +214,14 @@ function default_1(defaultFuncs, api, ctx) {
             }
         }
         catch (err) {
-            const finalError = err instanceof Error ? err : new Error(err.message || err.error || 'An unknown error occurred during theme operation.');
+            const finalError = err instanceof Error
+                ? err
+                : new Error(err.message ||
+                    err.error ||
+                    'An unknown error occurred during theme operation.');
             _callback(finalError);
         }
         return finalReturnPromise;
     };
 }
-;
 //# sourceMappingURL=theme.js.map

@@ -1,5 +1,5 @@
 // @ChoruOfficial
-"use strict";
+'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = default_1;
 const utils = require("../../../utils");
@@ -70,7 +70,7 @@ function formatThreadGraphQLResponse(messageThread) {
         messageCount: messageThread.messages_count,
         timestamp: messageThread.updated_time_precise,
         muteUntil: messageThread.mute_until,
-        isGroup: messageThread.thread_type == "GROUP",
+        isGroup: messageThread.thread_type == 'GROUP',
         isSubscribed: messageThread.is_viewer_subscribed,
         isArchived: messageThread.has_viewer_archived,
         folder: messageThread.folder,
@@ -94,7 +94,7 @@ function formatThreadGraphQLResponse(messageThread) {
                 return res;
             }, {})
             : {},
-        adminIDs: messageThread.thread_admins.map(a => a.id),
+        adminIDs: messageThread.thread_admins.map((a) => a.id),
         approvalMode: Boolean(messageThread.approval_mode),
         approvalQueue: messageThread.group_approval_queue.nodes.map((a) => ({
             inviterID: a.inviter.id,
@@ -113,7 +113,7 @@ function formatThreadGraphQLResponse(messageThread) {
         serverTimestamp: messageThread.updated_time_precise,
         imageSrc: messageThread.image ? messageThread.image.uri : null,
         isCanonicalUser: messageThread.is_canonical_neo_user,
-        isCanonical: messageThread.thread_type != "GROUP",
+        isCanonical: messageThread.thread_type != 'GROUP',
         recipientsLoadable: true,
         hasEmailParticipant: false,
         readOnly: false,
@@ -121,9 +121,9 @@ function formatThreadGraphQLResponse(messageThread) {
         lastMessageTimestamp: messageThread.last_message
             ? messageThread.last_message.timestamp_precise
             : null,
-        lastMessageType: "message",
+        lastMessageType: 'message',
         lastReadTimestamp: lastReadTimestamp,
-        threadType: messageThread.thread_type == "GROUP" ? 2 : 1,
+        threadType: messageThread.thread_type == 'GROUP' ? 2 : 1,
         inviteLink: {
             enable: messageThread.joinable_mode?.mode == 1,
             link: messageThread.joinable_mode?.link || null,
@@ -144,24 +144,27 @@ function default_1(defaultFuncs, api, ctx) {
      * @param {string[]} tags - An array of tags to filter threads by (e.g., ["INBOX", "ARCHIVED"]).
      * @returns {Promise<Object[]>} A promise that resolves with an array of formatted thread objects.
      */
-    return async function getThreadList(limit, timestamp = null, tags = ["INBOX"]) {
-        if (utils.getType(limit) !== "Number" || !Number.isInteger(limit) || limit <= 0) {
-            throw new Error("getThreadList: limit must be a positive integer.");
+    return async function getThreadList(limit, timestamp = null, tags = ['INBOX']) {
+        if (utils.getType(limit) !== 'Number' ||
+            !Number.isInteger(limit) ||
+            limit <= 0) {
+            throw new Error('getThreadList: limit must be a positive integer.');
         }
-        if (utils.getType(timestamp) !== "Null" && (utils.getType(timestamp) !== "Number" || !Number.isInteger(timestamp))) {
-            throw new Error("getThreadList: timestamp must be an integer or null.");
+        if (utils.getType(timestamp) !== 'Null' &&
+            (utils.getType(timestamp) !== 'Number' || !Number.isInteger(timestamp))) {
+            throw new Error('getThreadList: timestamp must be an integer or null.');
         }
-        if (utils.getType(tags) === "String") {
+        if (utils.getType(tags) === 'String') {
             tags = [tags];
         }
-        if (utils.getType(tags) !== "Array") {
-            throw new Error("getThreadList: tags must be an array.");
+        if (utils.getType(tags) !== 'Array') {
+            throw new Error('getThreadList: tags must be an array.');
         }
         const form = {
             av: ctx.i_userID || ctx.userID,
             queries: JSON.stringify({
                 o0: {
-                    doc_id: "3426149104143726",
+                    doc_id: '3426149104143726',
                     query_params: {
                         limit: limit + (timestamp ? 1 : 0),
                         before: timestamp,
@@ -171,17 +174,17 @@ function default_1(defaultFuncs, api, ctx) {
                     },
                 },
             }),
-            batch_name: "MessengerGraphQLThreadlistFetcher",
+            batch_name: 'MessengerGraphQLThreadlistFetcher',
         };
         try {
             const resData = await defaultFuncs
-                .post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form)
+                .post('https://www.facebook.com/api/graphqlbatch/', ctx.jar, form)
                 .then(utils.parseAndCheckLogin(ctx, defaultFuncs));
             if (resData[resData.length - 1].error_results > 0) {
                 throw new Error(JSON.stringify(resData[0].o0.errors));
             }
             if (resData[resData.length - 1].successful_results === 0) {
-                throw new Error("getThreadList: there was no successful_results");
+                throw new Error('getThreadList: there was no successful_results');
             }
             let nodes = resData[0].o0.data.viewer.message_threads.nodes;
             if (timestamp) {
@@ -190,10 +193,9 @@ function default_1(defaultFuncs, api, ctx) {
             return nodes.map(formatThreadGraphQLResponse);
         }
         catch (err) {
-            utils.error("getThreadList", err);
+            utils.error('getThreadList', err);
             throw err;
         }
     };
 }
-;
 //# sourceMappingURL=getThreadList.js.map
