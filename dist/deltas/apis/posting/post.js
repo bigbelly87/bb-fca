@@ -34,8 +34,8 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = default_1;
-const utils = require("../../../utils");
 const fs = __importStar(require("fs"));
+const utils = require("../../../utils");
 /**
  * @namespace api.post
  * @description A collection of functions for creating Facebook posts.
@@ -189,6 +189,7 @@ function default_1(defaultFuncs, api, ctx) {
             const result = {
                 success: true,
                 postID: postResult.data?.story_create?.story?.id || null,
+                url: postResult.data?.story_create?.story?.url || null,
                 data: postResult,
             };
             if (callback) {

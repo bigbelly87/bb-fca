@@ -7,6 +7,7 @@ export default function (defaultFuncs: any, api: any, ctx: any): {
     create: (options: any, callback: any) => Promise<{
         success: boolean;
         postID: any;
+        url: any;
         data: any;
     }>;
     delete: (postID: any, callback: any) => Promise<{

@@ -107,6 +107,7 @@ export interface CreatePostResult {
   success: boolean;
   postID: string | null;
   data: any;
+  url?: string | null;
 }
 
 export interface DeletePostResult {
@@ -549,11 +550,7 @@ export interface API {
     threadID: ThreadID,
     callback?: Callback,
   ): void;
-  shareContact(
-    senderID: UserID,
-    threadID: ThreadID,
-    callback?: Callback,
-  ): void;
+  shareContact(senderID: UserID, threadID: ThreadID, callback?: Callback): void;
 
   /** Resolve a photo's full URL from its ID. */
   resolvePhotoUrl(
@@ -597,10 +594,7 @@ export interface API {
     postID: string,
     callback?: Callback<ShareResult>,
   ): Promise<ShareResult>;
-  share(
-    postID: string,
-    callback?: Callback<ShareResult>,
-  ): Promise<ShareResult>;
+  share(postID: string, callback?: Callback<ShareResult>): Promise<ShareResult>;
 
   /** Post a story. */
   story(options: any, callback?: Callback): Promise<any>;

@@ -1,5 +1,5 @@
-import utils = require('../../../utils');
 import * as fs from 'fs';
+import utils = require('../../../utils');
 
 /**
  * @namespace api.post
@@ -161,6 +161,7 @@ export default function(defaultFuncs: any, api: any, ctx: any) {
       const result = {
         success: true,
         postID: postResult.data?.story_create?.story?.id || null,
+        url: postResult.data?.story_create?.story?.url || null,
         data: postResult,
       };
 
